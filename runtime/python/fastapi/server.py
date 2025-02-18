@@ -88,14 +88,14 @@ if __name__ == '__main__':
                         default=50000)
     parser.add_argument('--model_dir',
                         type=str,
-                        default='iic/CosyVoice-300M',
+                        default='pretrained_models/CosyVoice2-0.5B',
                         help='local path or modelscope repo id')
     args = parser.parse_args()
+    #try:
+    #    cosyvoice = CosyVoice(args.model_dir)
+    #except Exception:
     try:
-        cosyvoice = CosyVoice(args.model_dir)
+        cosyvoice = CosyVoice2(args.model_dir)
     except Exception:
-        try:
-            cosyvoice = CosyVoice2(args.model_dir)
-        except Exception:
-            raise TypeError('no valid model_type!')
-    uvicorn.run(app, host="0.0.0.0", port=args.port)
+        raise TypeError('no valid model_type!')
+    uvicorn.run(app, host="0.0.0.0", port=8000)
