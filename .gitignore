@@ -43,7 +43,10 @@ compile_commands.json
 
 # train/inference files
 *.wav
+*.m4a
+*.aac
 *.pt
 pretrained_models/*
 *_pb2_grpc.py
 *_pb2.py
+*.tar

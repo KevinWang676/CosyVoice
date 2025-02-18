@@ -61,8 +61,11 @@ def main():
             request.instruct_request.CopyFrom(instruct_request)
 
         response = stub.Inference(request)
+        tts_audio = b''
+        for r in response:
+            tts_audio += r.tts_audio
+        tts_speech = torch.from_numpy(np.array(np.frombuffer(tts_audio, dtype=np.int16))).unsqueeze(dim=0)
         logging.info('save response to {}'.format(args.tts_wav))
-        tts_speech = torch.from_numpy(np.array(np.frombuffer(response.tts_audio, dtype=np.int16))).unsqueeze(dim=0)
         torchaudio.save(args.tts_wav, tts_speech, target_sr)
         logging.info('get response')
 
@@ -90,10 +93,11 @@ if __name__ == "__main__":
                         default='希望你以后能够做的比我还好呦。')
     parser.add_argument('--prompt_wav',
                         type=str,
-                        default='../../../zero_shot_prompt.wav')
+                        default='../../../asset/zero_shot_prompt.wav')
     parser.add_argument('--instruct_text',
                         type=str,
-                        default='Theo \'Crimson\', is a fiery, passionate rebel leader. Fights with fervor for justice, but struggles with impulsiveness.')
+                        default='Theo \'Crimson\', is a fiery, passionate rebel leader. \
+                                 Fights with fervor for justice, but struggles with impulsiveness.')
     parser.add_argument('--tts_wav',
                         type=str,
                         default='demo.wav')
