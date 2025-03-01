@@ -170,7 +170,7 @@ def main():
                                       seed, stream, speed],
                               outputs=[audio_output])
         mode_checkbox_group.change(fn=change_instruction, inputs=[mode_checkbox_group], outputs=[instruction_text])
-    demo.queue(max_size=5, default_concurrency_limit=2)
+    demo.queue(max_size=6, default_concurrency_limit=2)
     demo.launch(share=True, server_name='0.0.0.0', server_port=8020)
 
 
