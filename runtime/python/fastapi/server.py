@@ -26,7 +26,45 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append('{}/../../..'.format(ROOT_DIR))
 sys.path.append('{}/../../../third_party/Matcha-TTS'.format(ROOT_DIR))
 from cosyvoice.cli.cosyvoice import CosyVoice, CosyVoice2
-from cosyvoice.utils.file_utils import load_wav
+#from cosyvoice.utils.file_utils import load_wav
+
+from fastapi import HTTPException
+import requests
+import tempfile
+
+# Keep the original load_wav function unchanged
+def load_wav(wav, target_sr):
+    speech, sample_rate = torchaudio.load(wav, backend='soundfile')
+    speech = speech.mean(dim=0, keepdim=True)
+    if sample_rate != target_sr:
+        assert sample_rate > target_sr, 'wav sample rate {} must be greater than {}'.format(sample_rate, target_sr)
+        speech = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=target_sr)(speech)
+    return speech
+
+# Add a new function to handle URLs
+def load_wav_from_url(url, target_sr):
+    # Download the file from the URL to a temporary file
+    response = requests.get(url)
+    if response.status_code != 200:
+        raise HTTPException(status_code=400, detail=f"Failed to download audio from URL: {url}")
+    
+    # Create a temporary file
+    with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+        temp_file.write(response.content)
+        temp_file.flush()
+        temp_path = temp_file.name
+    
+    try:
+        # Use the existing load_wav function with the file path
+        speech, sample_rate = torchaudio.load(temp_path, backend='soundfile')
+        speech = speech.mean(dim=0, keepdim=True)
+        if sample_rate != target_sr:
+            assert sample_rate > target_sr, 'wav sample rate {} must be greater than {}'.format(sample_rate, target_sr)
+            speech = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=target_sr)(speech)
+        return speech
+    finally:
+        # Clean up the temporary file
+        os.unlink(temp_path)
 
 app = FastAPI()
 # set cross region allowance
@@ -53,14 +91,22 @@ async def inference_sft(tts_text: str = Form(), spk_id: str = Form()):
 
 @app.get("/inference_zero_shot")
 @app.post("/inference_zero_shot")
-async def inference_zero_shot(tts_text: str = Form(), prompt_text: str = Form(), prompt_wav: UploadFile = File()):
-    prompt_speech_16k = load_wav(prompt_wav.file, 16000)
+async def inference_zero_shot(
+    tts_text: str = Form(), 
+    prompt_text: str = Form(), 
+    prompt_wav_url: str = Form(...)  # Using ... makes this parameter required
+):
+    # Process the URL directly - no need for conditionals
+    prompt_speech_16k = load_wav_from_url(prompt_wav_url, 16000)
+    
+    # Rest of the function remains the same
     model_output = cosyvoice.inference_zero_shot(tts_text, prompt_text, prompt_speech_16k, stream=False, speed=1.0)
     
     # Collect all audio data instead of streaming it
     audio_data = bytearray()
     for chunk in generate_data(model_output):
         audio_data.extend(chunk)
+        
     # Return complete audio file
     return Response(
         content=bytes(audio_data),
