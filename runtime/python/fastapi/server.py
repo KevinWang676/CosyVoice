@@ -31,6 +31,7 @@ from cosyvoice.cli.cosyvoice import CosyVoice, CosyVoice2
 from fastapi import HTTPException
 import requests
 import tempfile
+import torchaudio
 
 # Keep the original load_wav function unchanged
 def load_wav(wav, target_sr):
