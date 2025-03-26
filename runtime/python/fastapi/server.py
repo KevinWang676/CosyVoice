@@ -95,7 +95,8 @@ async def inference_sft(tts_text: str = Form(), spk_id: str = Form()):
 async def inference_zero_shot(
     tts_text: str = Form(), 
     prompt_text: str = Form(), 
-    prompt_wav_url: str = Form(...)  # Using ... makes this parameter required
+    prompt_wav_url: str = Form(...),  # Using ... makes this parameter required
+    speed: float = Form(...)
 ):
     # Process the URL directly - no need for conditionals
     prompt_speech_16k = load_wav_from_url(prompt_wav_url, 16000)
@@ -133,10 +134,21 @@ async def inference_instruct(tts_text: str = Form(), spk_id: str = Form(), instr
 @app.post("/inference_instruct2")
 async def inference_instruct2(tts_text: str = Form(), instruct_text: str = Form(), prompt_wav: UploadFile = File()):
     prompt_speech_16k = load_wav(prompt_wav.file, 16000)
-    model_output = cosyvoice.inference_instruct2(tts_text, instruct_text, prompt_speech_16k)
-    return StreamingResponse(generate_data(model_output))
-
-
+    
+    # Disable streaming by setting stream=False (assuming the function accepts this parameter)
+    model_output = cosyvoice.inference_instruct2(tts_text, instruct_text, prompt_speech_16k, stream=False)
+    
+    # Collect all audio data instead of streaming it
+    audio_data = bytearray()
+    for chunk in generate_data(model_output):
+        audio_data.extend(chunk)
+    print("instruct模式生成成功！")
+    # Return complete audio file
+    return Response(
+        content=bytes(audio_data),
+        media_type="audio/wav",
+        headers={"Content-Disposition": "attachment; filename=tts_output.wav"}
+    )
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
