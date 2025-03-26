@@ -102,7 +102,7 @@ async def inference_zero_shot(
     prompt_speech_16k = load_wav_from_url(prompt_wav_url, 16000)
     
     # Rest of the function remains the same
-    model_output = cosyvoice.inference_zero_shot(tts_text, prompt_text, prompt_speech_16k, stream=False, speed=1.0)
+    model_output = cosyvoice.inference_zero_shot(tts_text, prompt_text, prompt_speech_16k, stream=False, speed=speed)
     
     # Collect all audio data instead of streaming it
     audio_data = bytearray()
