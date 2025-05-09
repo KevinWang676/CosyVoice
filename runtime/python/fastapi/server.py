@@ -132,11 +132,11 @@ async def inference_instruct(tts_text: str = Form(), spk_id: str = Form(), instr
 
 @app.get("/inference_instruct2")
 @app.post("/inference_instruct2")
-async def inference_instruct2(tts_text: str = Form(), instruct_text: str = Form(), prompt_wav: UploadFile = File()):
+async def inference_instruct2(tts_text: str = Form(), instruct_text: str = Form(), prompt_wav: UploadFile = File(), speed: float = Form(...)):
     prompt_speech_16k = load_wav(prompt_wav.file, 16000)
     
     # Disable streaming by setting stream=False (assuming the function accepts this parameter)
-    model_output = cosyvoice.inference_instruct2(tts_text, instruct_text, prompt_speech_16k, stream=False)
+    model_output = cosyvoice.inference_instruct2(tts_text, instruct_text, prompt_speech_16k, stream=False, speed=speed)
     
     # Collect all audio data instead of streaming it
     audio_data = bytearray()
@@ -165,7 +165,7 @@ if __name__ == '__main__':
     #except Exception:
     try:
         #cosyvoice = CosyVoice2(args.model_dir, load_jit=False, load_trt=True, fp16=True)
-        cosyvoice = CosyVoice2(args.model_dir, load_jit=False, load_trt=False, fp16=False)
+        cosyvoice = CosyVoice2(args.model_dir, load_jit=False, load_trt=False, fp16=True)
     except Exception:
         raise TypeError('no valid model_type!')
     uvicorn.run(app, host="0.0.0.0", port=8000)
