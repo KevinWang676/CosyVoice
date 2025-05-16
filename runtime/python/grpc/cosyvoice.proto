@@ -3,41 +3,54 @@ syntax = "proto3";
 package cosyvoice;
 option go_package = "protos/";
 
-service CosyVoice{
+// ───────────────────────────────────────────────────────────────────────────────
+//  Service
+// ───────────────────────────────────────────────────────────────────────────────
+service CosyVoice {
   rpc Inference(Request) returns (stream Response) {}
 }
 
-message Request{
+// ───────────────────────────────────────────────────────────────────────────────
+//  Top‑level wrapper
+// ───────────────────────────────────────────────────────────────────────────────
+message Request {
   oneof RequestPayload {
-    sftRequest sft_request = 1;
-    zeroshotRequest zero_shot_request = 2;
+    sftRequest        sft_request        = 1;
+    zeroshotRequest   zero_shot_request  = 2;
     crosslingualRequest cross_lingual_request = 3;
-    instructRequest instruct_request = 4;
+    instructRequest   instruct_request   = 4;
   }
 }
 
-message sftRequest{
-  string spk_id = 1;
+// ───────────────────────────────────────────────────────────────────────────────
+//  Individual request messages
+// ───────────────────────────────────────────────────────────────────────────────
+message sftRequest {
+  string spk_id  = 1;
   string tts_text = 2;
 }
 
-message zeroshotRequest{
-  string tts_text = 1;
+message zeroshotRequest {
+  string tts_text   = 1;
   string prompt_text = 2;
-  bytes prompt_audio = 3;
+  bytes  prompt_audio = 3;  // URL (utf‑8) or raw bytes
+  float  speed        = 4;  // ⎯ optional, 1 = normal speed
 }
 
-message crosslingualRequest{
-  string tts_text = 1;
-  bytes prompt_audio = 2;
+message crosslingualRequest {
+  string tts_text   = 1;
+  bytes  prompt_audio = 2;
+  float  speed        = 3;  // optional
 }
 
-message instructRequest{
-  string tts_text = 1;
-  string spk_id = 2;
-  string instruct_text = 3;
+message instructRequest {
+  string tts_text      = 1;
+  string instruct_text = 2;
+  bytes  prompt_audio  = 3; // URL (utf‑8) or raw bytes
+  float  speed         = 4; // optional
 }
 
-message Response{
+// ───────────────────────────────────────────────────────────────────────────────
+message Response {
   bytes tts_audio = 1;
 }
